@@ -10,15 +10,20 @@ type Result = { ok: boolean; fact: Fact; given: number } | null;
 const BEST_KEY = "best17-35";
 
 export default function Trainer() {
-  const [tab, setTab] = useState<Tab>("table");
+  const [tab, setTabState] = useState<Tab>("table");
 
   useEffect(() => {
-    if (window.location.hash === "#test") setTab("test");
+    if (window.location.hash === "#test") setTabState("test");
   }, []);
+
+  const setTab = (t: Tab) => {
+    setTabState(t);
+    window.scrollTo({ top: 0 });
+  };
 
   return (
     <div className="wrap">
-      <header className="felt">
+      <header className={`felt${tab === "test" ? " compact" : ""}`}>
         <h1>Bảng nhân 17 &amp; 35</h1>
         <p className="sub">
           Học thuộc từ ×1 đến ×20. Xem bảng, che đáp án để tự kiểm tra, rồi vào chế độ test
@@ -194,6 +199,9 @@ function TestView() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const goRef = useRef<HTMLButtonElement>(null);
+  // Trên điện thoại dùng bàn số của trang, không bật bàn phím iOS (tránh che màn hình và nhảy layout)
+  const [touch, setTouch] = useState(false);
+  const touchRef = useRef(false);
   const answered = result !== null;
 
   const next = useCallback(
@@ -202,12 +210,17 @@ function TestView() {
       setInput("");
       setResult(null);
       setFlash("");
-      requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+      if (!touchRef.current) {
+        requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+      }
     },
     [set, range, misses]
   );
 
   useEffect(() => {
+    const isTouch = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+    touchRef.current = isTouch;
+    setTouch(isTouch);
     setBest(readBest());
     next();
     // chỉ chạy một lần khi mở chế độ test
@@ -215,7 +228,7 @@ function TestView() {
   }, []);
 
   useEffect(() => {
-    if (answered) goRef.current?.focus({ preventScroll: true });
+    if (answered && !touchRef.current) goRef.current?.focus({ preventScroll: true });
   }, [answered]);
 
   const submit = (e?: FormEvent) => {
@@ -280,20 +293,20 @@ function TestView() {
   const modeLabel = set === "both" ? "Test nâng cao · bảng 17 hoặc 35" : `Test bảng ${set}`;
 
   return (
-    <section className="view">
+    <section className={`view test-view${touch ? " is-touch" : ""}`}>
       <div className="toolbar">
-        <div className="seg">
+        <div className="seg seg-mode">
           <button aria-pressed={set === "17"} onClick={() => changeSet("17")}>
-            Test bảng 17
+            <span className="long">Test </span>Bảng 17
           </button>
           <button aria-pressed={set === "35"} onClick={() => changeSet("35")}>
-            Test bảng 35
+            <span className="long">Test </span>Bảng 35
           </button>
           <button className="adv" aria-pressed={set === "both"} onClick={() => changeSet("both")}>
-            ★ Test nâng cao (17 + 35)
+            ★ <span className="long">Test </span>Nâng cao<span className="long"> (17 + 35)</span>
           </button>
         </div>
-        <div className="seg">
+        <div className="seg seg-range">
           <button aria-pressed={range === 10} onClick={() => changeRange(10)}>
             ×1–10
           </button>
@@ -307,7 +320,7 @@ function TestView() {
         <Stat label="Đúng" value={ok} />
         <Stat label="Sai" value={bad} />
         <Stat label="Chuỗi đúng" value={streak} />
-        <Stat label="Kỷ lục chuỗi" value={best} />
+        <Stat label="Kỷ lục" value={best} />
       </div>
 
       <div className={`card ${flash}`}>
@@ -324,7 +337,7 @@ function TestView() {
           <input
             id="answer"
             ref={inputRef}
-            inputMode="numeric"
+            inputMode={touch ? "none" : "numeric"}
             pattern="[0-9]*"
             maxLength={4}
             placeholder="?"
@@ -340,21 +353,36 @@ function TestView() {
         </form>
 
         <div className={`feedback${result ? (result.ok ? " ok" : " bad") : ""}`} aria-live="polite">
-          {result &&
-            (result.ok
-              ? `Đúng! ${result.fact[0]} × ${result.fact[1]} = ${result.fact[0] * result.fact[1]}`
-              : `Chưa đúng. ${result.fact[0]} × ${result.fact[1]} = ${result.fact[0] * result.fact[1]} (${splitText(
-                  result.fact[0],
-                  result.fact[1]
-                )})`)}
+          {result && (
+            <>
+              <span className="fb-main">
+                {result.ok ? "✓ Đúng! " : "✗ Chưa đúng. "}
+                {result.fact[0]} × {result.fact[1]} = {result.fact[0] * result.fact[1]}
+              </span>
+              <span className="fb-split">
+                {result.ok ? splitText(result.fact[0], result.fact[1]) : `Bạn trả lời ${result.given} · ${splitText(result.fact[0], result.fact[1])}`}
+              </span>
+            </>
+          )}
         </div>
 
         <div className="keypad">
-          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "Xóa", "0", "OK"].map((t) => (
-            <button key={t} type="button" onClick={() => press(t)}>
-              {t}
-            </button>
-          ))}
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "Xóa", "0", "OK"].map((t) => {
+            const isOk = t === "OK";
+            const label = t === "Xóa" ? "⌫" : isOk ? (answered ? "Tiếp →" : "OK") : t;
+            return (
+              <button
+                key={t}
+                type="button"
+                className={isOk ? "k-ok" : t === "Xóa" ? "k-del" : undefined}
+                aria-label={t === "Xóa" ? "Xóa" : isOk ? (answered ? "Câu tiếp theo" : "Trả lời") : t}
+                disabled={answered && !isOk}
+                onClick={() => press(t)}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 

@@ -15,6 +15,10 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
+html { background: var(--bg); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+button, input { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+button { -webkit-user-select: none; user-select: none; }
+button:disabled { cursor: default; }
 body {
   background: var(--bg); color: var(--fg);
   font-family: var(--f-body), ui-sans-serif, system-ui, sans-serif;
@@ -24,7 +28,12 @@ body {
 h1, h2, h3, .q, .ans, .stat b, .chip, #answer, .keypad button {
   font-family: var(--f-display), ui-sans-serif, system-ui, sans-serif;
 }
-.wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 20px; }
+.wrap {
+  max-width: 860px; margin: 0 auto; display: grid; gap: 20px;
+  padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
 .view { display: grid; gap: 18px; }
 
 header.felt { background: var(--felt); color: var(--felt-fg); border-radius: 18px; padding: 22px 22px 20px; display: grid; gap: 14px; position: relative; overflow: hidden; }
@@ -81,7 +90,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 .answer-row { display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 380px; }
 #answer { font-weight: 800; font-size: 32px; width: 100%; min-width: 0; text-align: center; padding: 10px; border: 2px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); font-variant-numeric: tabular-nums; }
 .go { font: 700 16px var(--f-body), sans-serif; border: 0; border-radius: 12px; padding: 0 20px; background: var(--felt); color: var(--felt-fg); cursor: pointer; white-space: nowrap; }
-.feedback { min-height: 1.6em; font-weight: 600; font-size: 17px; }
+.feedback { min-height: 3.1em; font-weight: 600; font-size: 17px; display: grid; align-content: center; gap: 2px; }
+.fb-split { font-weight: 500; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.keypad button.k-ok { background: var(--felt); color: var(--felt-fg); border-color: var(--felt); font-size: 18px; }
+.keypad button.k-del { color: var(--muted); }
+.keypad button:disabled { opacity: .35; }
+.keypad button:not(:disabled):active { transform: scale(.96); }
 .feedback.ok { color: var(--ok); } .feedback.bad { color: var(--bad); }
 .card.flash-ok { animation: ok .4s; } .card.flash-bad { animation: bad .4s; }
 @keyframes ok { 50% { box-shadow: 0 0 0 4px var(--ok); } }
@@ -96,4 +110,56 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 .misslist span { background: var(--soft); border-radius: 8px; padding: 4px 10px; font-variant-numeric: tabular-nums; font-size: 15px; }
 .misslist .empty { background: none; padding: 0; color: var(--muted); }
 .reset { font: 600 14px var(--f-body), sans-serif; background: transparent; border: 1.5px solid var(--line); color: var(--muted); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
-@media (max-width: 520px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+/* ---- Điện thoại (iPhone 15 Pro: 393×852) ---- */
+@media (max-width: 520px) {
+  .wrap { gap: 14px; padding-block: 12px 32px; }
+  header.felt { padding: 18px 18px 16px; gap: 10px; border-radius: 16px; }
+  h1 { font-size: 30px; }
+  .sub { font-size: 15px; }
+  .pay { font-size: 13px; padding-right: 12px; }
+  .chip { width: 30px; height: 30px; font-size: 13px; }
+  /* Ở chế độ test ẩn header để câu hỏi và bàn số vừa một màn hình Safari */
+  header.felt.compact { display: none; }
+
+  .tabs { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+  .tabs button { padding: 10px 8px; }
+  .toolbar { gap: 8px; }
+  .view { gap: 14px; }
+  .seg { width: 100%; }
+  .seg button { flex: 1 1 auto; padding: 8px 10px; font-size: 13.5px; }
+  .seg-mode { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 6px; }
+  .seg-mode button { padding: 9px 4px; font-size: 14px; }
+  .seg-range { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .seg-range button { padding: 5px 8px; font-size: 13px; }
+  .long { display: none; }
+
+  /* Thứ tự trên điện thoại: chọn bảng → câu hỏi + bàn số → thống kê → phép cần ôn */
+  .test-view { display: flex; flex-direction: column; gap: 12px; }
+  .test-view .card { order: 1; }
+  .test-view .stats { order: 2; }
+  .test-view .misses { order: 3; }
+  .test-view > div:last-child { order: 4; }
+  .is-touch .go { display: none; }
+  .is-touch .answer-row { max-width: none; }
+  .mode-label { display: none; }
+
+  .rows li { padding: 7px 14px; }
+  .eq { font-size: 16px; }
+
+  .stats { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .stat { padding: 6px 8px; border-radius: 10px; text-align: center; }
+  .stat span { font-size: 10px; letter-spacing: .03em; }
+  .stat b { font-size: 19px; }
+
+  .card { padding: 16px 14px; gap: 10px; border-radius: 16px; }
+  .q { font-size: 56px; }
+  #answer { font-size: 28px; padding: 6px 8px; }
+  .go { padding: 0 16px; font-size: 15px; }
+  .feedback { font-size: 16px; min-height: 2.9em; }
+  .keypad { max-width: none; gap: 8px; }
+  .keypad button { min-height: 52px; font-size: 24px; }
+}
+@media (max-width: 360px) {
+  .q { font-size: 48px; }
+  .keypad button { min-height: 48px; }
+}
