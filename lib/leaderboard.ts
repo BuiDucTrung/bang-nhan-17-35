@@ -1,44 +1,54 @@
 import type { Pool } from "pg";
 import { CHALLENGE_LIMIT_MS } from "./rules";
 
-export type LeaderRow = { rank: number; username: string; durationMs: number; achievedAt: string; userId: number };
+export type LeaderRow = { rank: number; username: string; durationMs: number; achievedAt: string };
 
-/** Thời gian tốt nhất (≤ 16 giây) của mỗi người, xếp từ nhanh đến chậm. Bằng giờ thì ai đạt trước xếp trên. */
-const RANKED = `
-  with best as (
-    select distinct on (user_id) user_id, duration_ms, finished_at
-    from challenges
-    where duration_ms is not null and duration_ms <= ${CHALLENGE_LIMIT_MS}
-    order by user_id, duration_ms asc, finished_at asc
-  )
-  select row_number() over (order by b.duration_ms asc, b.finished_at asc)::int as rank,
-         u.id as user_id, u.username, b.duration_ms, b.finished_at
-  from best b join users u on u.id = b.user_id
-`;
-
-const toRow = (r: Record<string, unknown>): LeaderRow => ({
-  rank: Number(r.rank),
-  userId: Number(r.user_id),
-  username: String(r.username),
-  durationMs: Number(r.duration_ms),
-  achievedAt: new Date(r.finished_at as string).toISOString(),
-});
-
+/**
+ * Bảng Tôn Giả Vinh Diệu: thời gian tốt nhất (≤ 16 giây) của mỗi người, nhanh nhất lên đầu.
+ * Bằng giờ thì ai đạt trước xếp trên. Đọc từ bảng best_times (mỗi người một dòng) nên rất nhanh.
+ */
 export async function topRows(pool: Pool, limit = 100): Promise<LeaderRow[]> {
-  const r = await pool.query(`${RANKED} order by rank limit $1`, [limit]);
-  return r.rows.map(toRow);
-}
-
-export async function rowForUser(pool: Pool, userId: number): Promise<LeaderRow | null> {
-  const r = await pool.query(`select * from (${RANKED}) t where user_id = $1`, [userId]);
-  return r.rows[0] ? toRow(r.rows[0]) : null;
-}
-
-/** Thành tích tốt nhất của người dùng, kể cả khi chưa đạt 16 giây. */
-export async function personalBest(pool: Pool, userId: number): Promise<number | null> {
   const r = await pool.query(
-    "select min(duration_ms) as best from challenges where user_id = $1 and duration_ms is not null",
-    [userId]
+    `select row_number() over (order by b.duration_ms, b.achieved_at)::int as rank,
+            u.username, b.duration_ms, b.achieved_at
+     from best_times b join users u on u.id = b.user_id
+     where b.duration_ms <= $1
+     order by b.duration_ms, b.achieved_at
+     limit $2`,
+    [CHALLENGE_LIMIT_MS, limit]
   );
-  return r.rows[0]?.best == null ? null : Number(r.rows[0].best);
+  return r.rows.map((x) => ({
+    rank: x.rank,
+    username: x.username,
+    durationMs: x.duration_ms,
+    achievedAt: new Date(x.achieved_at).toISOString(),
+  }));
+}
+
+/** Kỷ lục cá nhân (kể cả khi chưa đạt 16 giây) và hạng nếu đã vào bảng. */
+export async function standing(pool: Pool, userId: number): Promise<{ personalBestMs: number | null; rank: number | null }> {
+  const r = await pool.query(
+    `select b.duration_ms,
+            case when b.duration_ms <= $2 then
+              (select count(*)::int + 1 from best_times o
+               where o.duration_ms < b.duration_ms
+                  or (o.duration_ms = b.duration_ms and o.achieved_at < b.achieved_at))
+            end as rank
+     from best_times b where b.user_id = $1`,
+    [userId, CHALLENGE_LIMIT_MS]
+  );
+  const row = r.rows[0];
+  return { personalBestMs: row ? row.duration_ms : null, rank: row?.rank ?? null };
+}
+
+/** Ghi thành tích mới nếu tốt hơn kỷ lục cũ. Trả về true nếu là kỷ lục mới. */
+export async function recordBest(pool: Pool, userId: number, durationMs: number, at: Date): Promise<boolean> {
+  const r = await pool.query(
+    `insert into best_times (user_id, duration_ms, achieved_at) values ($1, $2, $3)
+     on conflict (user_id) do update set duration_ms = excluded.duration_ms, achieved_at = excluded.achieved_at
+       where excluded.duration_ms < best_times.duration_ms
+     returning user_id`,
+    [userId, durationMs, at]
+  );
+  return r.rowCount === 1;
 }

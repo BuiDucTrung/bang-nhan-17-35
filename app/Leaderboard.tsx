@@ -3,23 +3,44 @@
 import { useEffect, useState } from "react";
 import { Auth, api } from "./Account";
 import { formatSeconds } from "@/lib/rules";
+import { consumeFresh } from "./lbState";
 
-type Row = { rank: number; username: string; durationMs: number; achievedAt: string; isMe: boolean };
-type Data = { rows: Row[]; me: { rank: number | null; personalBestMs: number | null } | null };
+type Row = { rank: number; username: string; durationMs: number; achievedAt: string };
+type Me = { username: string; rank: number | null; personalBestMs: number | null } | null;
+
+// Giữ lại bảng đã tải trong phiên này: quay lại tab là thấy ngay, đồng thời tải bản mới ở nền
+let cachedRows: Row[] | null = null;
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 export default function LeaderboardView({ auth, onPlay }: { auth: Auth; onPlay: () => void }) {
-  const [data, setData] = useState<Data | null>(null);
+  const [rows, setRows] = useState<Row[] | null>(cachedRows);
+  const [me, setMe] = useState<Me>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setError("");
-    api<Data>("/api/leaderboard")
-      .then(setData)
+    const url = consumeFresh() ? `/api/leaderboard?t=${Date.now()}` : "/api/leaderboard";
+    api<{ rows: Row[] }>(url)
+      .then((d) => {
+        cachedRows = d.rows;
+        setRows(d.rows);
+      })
       .catch((e) => setError((e as Error).message));
+  }, []);
+
+  useEffect(() => {
+    if (!auth.user) {
+      setMe(null);
+      return;
+    }
+    api<{ me: Me }>("/api/leaderboard/me")
+      .then((d) => setMe(d.me))
+      .catch(() => setMe(null));
   }, [auth.user]);
+
+  const myName = auth.user?.username.toLowerCase();
 
   return (
     <section className="view lb">
@@ -32,21 +53,20 @@ export default function LeaderboardView({ auth, onPlay }: { auth: Auth; onPlay: 
         </p>
       </header>
 
-      {auth.user && data?.me && (
+      {auth.user && me && (
         <div className="lb-me">
           <span>
-            <b>{auth.user.username}</b> ·{" "}
-            {data.me.rank ? (
+            <b>{me.username}</b> ·{" "}
+            {me.rank ? (
               <>
-                Hạng <b>#{data.me.rank}</b>
+                Hạng <b>#{me.rank}</b>
               </>
             ) : (
               "chưa vào bảng"
             )}
           </span>
           <span>
-            Kỷ lục:{" "}
-            <b>{data.me.personalBestMs != null ? formatSeconds(data.me.personalBestMs) : "chưa có"}</b>
+            Kỷ lục: <b>{me.personalBestMs != null ? formatSeconds(me.personalBestMs) : "chưa có"}</b>
           </span>
         </div>
       )}
@@ -57,27 +77,30 @@ export default function LeaderboardView({ auth, onPlay }: { auth: Auth; onPlay: 
         </p>
       )}
 
-      {!data && !error && <p className="lb-empty">Đang tải bảng xếp hạng…</p>}
+      {!rows && !error && <p className="lb-empty">Đang tải bảng xếp hạng…</p>}
 
-      {data && data.rows.length === 0 && (
+      {rows && rows.length === 0 && (
         <div className="lb-empty">
           <p>Chưa có ai vào bảng. Hãy là người đầu tiên.</p>
         </div>
       )}
 
-      {data && data.rows.length > 0 && (
+      {rows && rows.length > 0 && (
         <ol className="lb-list">
-          {data.rows.map((r) => (
-            <li key={r.rank} className={`${r.rank <= 3 ? `top top${r.rank}` : ""}${r.isMe ? " me" : ""}`}>
-              <span className="lb-rank">{r.rank}</span>
-              <span className="lb-name">
-                {r.username}
-                {r.isMe && <span className="badge">Bạn</span>}
-              </span>
-              <span className="lb-time">{formatSeconds(r.durationMs)}</span>
-              <span className="lb-date">{fmtDate(r.achievedAt)}</span>
-            </li>
-          ))}
+          {rows.map((r) => {
+            const isMe = r.username.toLowerCase() === myName;
+            return (
+              <li key={r.rank} className={`${r.rank <= 3 ? `top top${r.rank}` : ""}${isMe ? " me" : ""}`}>
+                <span className="lb-rank">{r.rank}</span>
+                <span className="lb-name">
+                  {r.username}
+                  {isMe && <span className="badge">Bạn</span>}
+                </span>
+                <span className="lb-time">{formatSeconds(r.durationMs)}</span>
+                <span className="lb-date">{fmtDate(r.achievedAt)}</span>
+              </li>
+            );
+          })}
         </ol>
       )}
 

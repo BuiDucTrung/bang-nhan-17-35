@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { currentUser, guard, jsonError } from "@/lib/auth";
+import { assertSameOrigin, housekeeping, rateLimit } from "@/lib/security";
 import { CHALLENGE_MULTIPLIERS, CHALLENGE_SIZE, CHALLENGE_TABLES } from "@/lib/rules";
 
 export const runtime = "nodejs";
@@ -19,10 +20,13 @@ function pickQuestions(): [number, number][] {
   return pool.slice(0, CHALLENGE_SIZE);
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   return guard(async () => {
+    assertSameOrigin(req);
     const user = await currentUser();
     if (!user) return jsonError("Hãy đăng nhập để tham gia challenge.", 401);
+    // Tối đa 60 lượt mỗi 10 phút cho một người (chặn spam làm phình cơ sở dữ liệu)
+    await rateLimit(`ch:${user.id}`, 60, 600, "Bạn bắt đầu quá nhiều lượt liên tiếp.");
 
     const pool = await db();
     // Huỷ các lượt đang dở của người này, mỗi lúc chỉ có một lượt
@@ -30,10 +34,11 @@ export async function POST() {
 
     const questions = pickQuestions();
     // Máy chủ ghi giờ bắt đầu (clock_timestamp) để tính thời gian chính thức
-    const r = await pool.query(
-      "insert into challenges (user_id, questions) values ($1, $2) returning id",
-      [user.id, JSON.stringify(questions)]
-    );
+    const r = await pool.query("insert into challenges (user_id, questions) values ($1, $2) returning id", [
+      user.id,
+      JSON.stringify(questions),
+    ]);
+    await housekeeping();
     return NextResponse.json({ id: r.rows[0].id, questions });
   });
 }

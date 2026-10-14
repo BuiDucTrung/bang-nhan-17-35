@@ -37,3 +37,12 @@ Mở http://localhost:3000
 1. Đẩy code lên GitHub.
 2. Vào https://vercel.com/new, chọn **Import** repository này.
 3. Vercel tự nhận Next.js, giữ nguyên cài đặt mặc định và bấm **Deploy**.
+
+## Tốc độ và bảo mật
+
+- Chữ thường dùng font hệ thống; chỉ tải một độ đậm của font tiêu đề.
+- Challenge, bảng xếp hạng và hộp đăng nhập chỉ tải khi người dùng mở tới.
+- Khách chưa đăng nhập không gọi máy chủ khi mở trang. Bảng xếp hạng công khai được CDN lưu 15 giây.
+- Header bảo mật (CSP, HSTS, chống nhúng trang, nosniff), chặn yêu cầu từ website khác, giới hạn kích thước dữ liệu gửi lên.
+- Khoá tạm 15 phút sau 8 lần sai mật khẩu; giới hạn tạo tài khoản và số lượt challenge.
+- Cookie phiên `__Host-`, HttpOnly, Secure, SameSite=Lax; chỉ lưu mã băm của phiên trong cơ sở dữ liệu.

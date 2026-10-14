@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Auth, api } from "./Account";
+import { markLeaderboardStale } from "./lbState";
 import { CHALLENGE_LIMIT_MS, CHALLENGE_SIZE, formatSeconds } from "@/lib/rules";
 
 type Phase = "intro" | "countdown" | "running" | "submitting" | "result";
@@ -47,7 +48,7 @@ export default function ChallengeView({ auth, onShowRank }: { auth: Auth; onShow
       setMe(null);
       return;
     }
-    api<{ me: Me }>("/api/leaderboard")
+    api<{ me: Me }>("/api/leaderboard/me")
       .then((d) => setMe(d.me))
       .catch(() => setMe(null));
   }, [auth.user, result]);
@@ -110,6 +111,7 @@ export default function ChallengeView({ auth, onShowRank }: { auth: Auth; onShow
     setPhase("submitting");
     try {
       const r = await api<FinishRes>("/api/challenge/finish", { id: idRef.current, answers, mistakes: miss });
+      markLeaderboardStale();
       setResult(r);
       setPhase("result");
     } catch (e) {

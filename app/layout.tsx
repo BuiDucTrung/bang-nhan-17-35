@@ -1,25 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Be_Vietnam_Pro } from "next/font/google";
+import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 
+// Chỉ tải một độ đậm của font tiêu đề. Chữ thường dùng font hệ thống (0 KB, hiển thị tiếng Việt chuẩn).
 const display = Bricolage_Grotesque({
   subsets: ["latin", "vietnamese"],
-  weight: ["600", "800"],
+  weight: ["800"],
   variable: "--f-display",
-});
-
-const body = Be_Vietnam_Pro({
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--f-body",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Bảng nhân 17 & 35",
   description:
-    "Học và luyện bảng nhân 17 và 35 từ ×1 đến ×20, có mẹo tính nhẩm và chế độ test.",
+    "Học và luyện bảng nhân 17 và 35 từ ×1 đến ×20, có mẹo tính nhẩm, chế độ test, Challenge và bảng Tôn Giả Vinh Diệu.",
   appleWebApp: { capable: true, title: "Bảng nhân", statusBarStyle: "default" },
   formatDetection: { telephone: false },
+  referrer: "strict-origin-when-cross-origin",
 };
 
 export const viewport: Viewport = {
@@ -34,7 +31,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={`${display.variable} ${body.variable}`}>
+    <html lang="vi" className={display.variable}>
       <body>{children}</body>
     </html>
   );

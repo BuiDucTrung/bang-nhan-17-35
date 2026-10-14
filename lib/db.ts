@@ -37,8 +37,29 @@ create table if not exists challenges (
   duration_ms integer,
   mistakes integer
 );
-create index if not exists challenges_done_idx on challenges (duration_ms, finished_at) where duration_ms is not null;
 create index if not exists challenges_user_idx on challenges (user_id);
+drop index if exists challenges_done_idx;
+
+-- Thời gian tốt nhất của mỗi người: bảng xếp hạng chỉ đọc bảng nhỏ này thay vì quét toàn bộ lịch sử
+create table if not exists best_times (
+  user_id integer primary key references users(id) on delete cascade,
+  duration_ms integer not null,
+  achieved_at timestamptz not null
+);
+create index if not exists best_times_rank_idx on best_times (duration_ms, achieved_at);
+insert into best_times (user_id, duration_ms, achieved_at)
+  select distinct on (user_id) user_id, duration_ms, finished_at from challenges
+  where duration_ms is not null and not exists (select 1 from best_times)
+  order by user_id, duration_ms, finished_at
+on conflict (user_id) do nothing;
+
+-- Đếm số lần thử để chặn dò mật khẩu và spam
+create table if not exists rate_limits (
+  key text primary key,
+  window_start timestamptz not null,
+  count integer not null
+);
+create index if not exists sessions_expiry_idx on sessions (expires_at);
 `;
 
 /** Tự tạo bảng ở lần gọi đầu tiên, không cần bước cài đặt riêng. */

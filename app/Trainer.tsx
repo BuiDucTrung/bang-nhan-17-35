@@ -2,9 +2,17 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Fact, MAX_N, TABLES, Table, factKey, splitText } from "./facts";
-import { AccountButton, AuthDialog, useAuth } from "./Account";
-import ChallengeView from "./Challenge";
-import LeaderboardView from "./Leaderboard";
+import dynamic from "next/dynamic";
+import { AccountButton, useAuth } from "./Account";
+
+// Các phần ít dùng hơn chỉ tải khi cần, để lần mở đầu tiên nhẹ và nhanh
+const loadChallenge = () => import("./Challenge");
+const loadLeaderboard = () => import("./Leaderboard");
+const loadAuthDialog = () => import("./AuthDialog");
+const Loading = () => <p className="lazy-loading">Đang tải…</p>;
+const ChallengeView = dynamic(loadChallenge, { ssr: false, loading: Loading });
+const LeaderboardView = dynamic(loadLeaderboard, { ssr: false, loading: Loading });
+const AuthDialog = dynamic(loadAuthDialog, { ssr: false });
 
 type Tab = "table" | "test" | "challenge" | "rank";
 type TestSet = "17" | "35" | "both";
@@ -69,10 +77,20 @@ export default function Trainer() {
         <button role="tab" aria-selected={tab === "test"} onClick={() => setTab("test")}>
           Test
         </button>
-        <button role="tab" aria-selected={tab === "challenge"} onClick={() => setTab("challenge")}>
+        <button
+          role="tab"
+          aria-selected={tab === "challenge"}
+          onPointerDown={() => void loadChallenge()}
+          onClick={() => setTab("challenge")}
+        >
           Challenge
         </button>
-        <button role="tab" aria-selected={tab === "rank"} onClick={() => setTab("rank")}>
+        <button
+          role="tab"
+          aria-selected={tab === "rank"}
+          onPointerDown={() => void loadLeaderboard()}
+          onClick={() => setTab("rank")}
+        >
           <span className="long">Tôn Giả </span>Vinh Diệu
         </button>
       </div>
@@ -82,7 +100,7 @@ export default function Trainer() {
       {tab === "challenge" && <ChallengeView auth={auth} onShowRank={() => setTab("rank")} />}
       {tab === "rank" && <LeaderboardView auth={auth} onPlay={() => setTab("challenge")} />}
 
-      <AuthDialog auth={auth} />
+      {auth.dialog && <AuthDialog auth={auth} />}
     </div>
   );
 }
