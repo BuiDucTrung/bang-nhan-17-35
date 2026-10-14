@@ -11,11 +11,23 @@ Website học và luyện bảng nhân 17 và 35, từ ×1 đến ×20. Làm b�
   - Trả lời xong, website báo đúng/sai kèm đáp án đúng. Bấm **Tiếp theo** để sang câu mới.
   - Đếm đúng, sai, chuỗi đúng, kỷ lục chuỗi. Phép làm sai được hỏi lại nhiều hơn.
 
+- **Tài khoản**: đăng ký bằng tên và mật khẩu, không cần email.
+  - Tên: ít nhất 1 ký tự, tối đa 20, chỉ chữ cái không dấu và chữ số, không khoảng trắng, không trùng người khác (không phân biệt hoa thường).
+  - Mật khẩu: ít nhất 6 ký tự, chỉ chữ cái không dấu và chữ số, không khoảng trắng. Mật khẩu được mã hoá bằng scrypt.
+- **Challenge**: 10 phép ngẫu nhiên không trùng từ bảng 17 và 35, không có ×1, ×10, ×20. Máy chủ bấm giờ từ lúc phát đề đến lúc nhận bài. Sai thì phải nhập lại.
+- **Tôn Giả Vinh Diệu**: bảng xếp hạng những người hoàn thành Challenge trong 16 giây trở xuống, mỗi người tính thời gian tốt nhất.
+
+## Cơ sở dữ liệu
+
+Website cần Postgres, đọc địa chỉ từ biến môi trường `DATABASE_URL` (hoặc `POSTGRES_URL`). Các bảng được tự tạo ở lần chạy đầu.
+
+Trên Vercel: mở project → **Storage** → **Create Database** → chọn **Neon** (Postgres) → **Connect** vào project này. Vercel tự thêm `DATABASE_URL`. Sau đó **Redeploy**.
+
 ## Chạy trên máy
 
 ```bash
 npm install
-npm run dev
+DATABASE_URL=postgres://user:pass@localhost:5432/bangnhan npm run dev
 ```
 
 Mở http://localhost:3000

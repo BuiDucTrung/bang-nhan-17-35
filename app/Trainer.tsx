@@ -2,53 +2,87 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Fact, MAX_N, TABLES, Table, factKey, splitText } from "./facts";
+import { AccountButton, AuthDialog, useAuth } from "./Account";
+import ChallengeView from "./Challenge";
+import LeaderboardView from "./Leaderboard";
 
-type Tab = "table" | "test";
+type Tab = "table" | "test" | "challenge" | "rank";
 type TestSet = "17" | "35" | "both";
 type Result = { ok: boolean; fact: Fact; given: number } | null;
 
 const BEST_KEY = "best17-35";
+const HASH: Record<Tab, string> = { table: "", test: "test", challenge: "challenge", rank: "vinh-dieu" };
 
 export default function Trainer() {
   const [tab, setTabState] = useState<Tab>("table");
+  const auth = useAuth();
 
   useEffect(() => {
-    if (window.location.hash === "#test") setTabState("test");
+    const h = window.location.hash.slice(1);
+    const t = (Object.keys(HASH) as Tab[]).find((k) => HASH[k] && HASH[k] === h);
+    if (t) setTabState(t);
   }, []);
 
   const setTab = (t: Tab) => {
     setTabState(t);
+    try {
+      history.replaceState(null, "", HASH[t] ? `#${HASH[t]}` : window.location.pathname);
+    } catch {
+      /* bỏ qua */
+    }
     window.scrollTo({ top: 0 });
   };
 
   return (
     <div className="wrap">
-      <header className={`felt${tab === "test" ? " compact" : ""}`}>
-        <h1>Bảng nhân 17 &amp; 35</h1>
-        <p className="sub">
-          Học thuộc từ ×1 đến ×20. Xem bảng, che đáp án để tự kiểm tra, rồi vào chế độ test
-          bảng 17 hoặc bảng 35.
-        </p>
-        <div className="payouts">
-          <div className="pay">
-            <span className="chip c17">17</span>Split · trả 17 ăn 1
+      <div className="topbar">
+        <span className="brand">
+          <span className="chip c17 mini">17</span>
+          <span className="chip c35 mini">35</span>
+          Bảng nhân
+        </span>
+        <AccountButton auth={auth} />
+      </div>
+
+      {tab === "table" && (
+        <header className="felt">
+          <h1>Bảng nhân 17 &amp; 35</h1>
+          <p className="sub">
+            Học thuộc từ ×1 đến ×20. Xem bảng, che đáp án để tự kiểm tra, luyện ở chế độ test rồi
+            thử sức ở Challenge để vào bảng Tôn Giả Vinh Diệu.
+          </p>
+          <div className="payouts">
+            <div className="pay">
+              <span className="chip c17">17</span>Split · trả 17 ăn 1
+            </div>
+            <div className="pay">
+              <span className="chip c35">35</span>Straight up · trả 35 ăn 1
+            </div>
           </div>
-          <div className="pay">
-            <span className="chip c35">35</span>Straight up · trả 35 ăn 1
-          </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === "table"} onClick={() => setTab("table")}>
           Bảng nhân
         </button>
         <button role="tab" aria-selected={tab === "test"} onClick={() => setTab("test")}>
-          Chế độ test
+          Test
+        </button>
+        <button role="tab" aria-selected={tab === "challenge"} onClick={() => setTab("challenge")}>
+          Challenge
+        </button>
+        <button role="tab" aria-selected={tab === "rank"} onClick={() => setTab("rank")}>
+          <span className="long">Tôn Giả </span>Vinh Diệu
         </button>
       </div>
 
-      {tab === "table" ? <TableView /> : <TestView />}
+      {tab === "table" && <TableView />}
+      {tab === "test" && <TestView />}
+      {tab === "challenge" && <ChallengeView auth={auth} onShowRank={() => setTab("rank")} />}
+      {tab === "rank" && <LeaderboardView auth={auth} onPlay={() => setTab("challenge")} />}
+
+      <AuthDialog auth={auth} />
     </div>
   );
 }
