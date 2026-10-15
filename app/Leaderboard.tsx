@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Auth, api } from "./Account";
-import { formatSeconds } from "@/lib/rules";
+import { CHALLENGE_LIMIT_S, formatSeconds } from "@/lib/rules";
 import { consumeFresh } from "./lbState";
 
 type Row = { rank: number; username: string; durationMs: number; achievedAt: string };
@@ -48,7 +48,7 @@ export default function LeaderboardView({ auth, onPlay }: { auth: Auth; onPlay: 
         <p className="eyebrow">Bảng xếp hạng</p>
         <h2 className="lb-title">Tôn Giả Vinh Diệu</h2>
         <p className="lb-sub">
-          Những người hoàn thành Challenge 10 phép trong 16 giây trở xuống. Mỗi người được tính thời gian tốt
+          Những người hoàn thành Challenge 10 phép trong {CHALLENGE_LIMIT_S} giây trở xuống. Mỗi người được tính thời gian tốt
           nhất. Bằng giờ thì ai đạt trước xếp trên.
         </p>
       </header>

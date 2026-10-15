@@ -29,7 +29,9 @@ export function passwordErrors(pw: string): string[] {
 /* ---------- Challenge ---------- */
 
 export const CHALLENGE_SIZE = 10;
-export const CHALLENGE_LIMIT_MS = 16_000;
+export const CHALLENGE_LIMIT_MS = 60_000;
+/** Mốc vào bảng Tôn Giả Vinh Diệu, tính bằng giây (dùng cho chữ hiển thị) */
+export const CHALLENGE_LIMIT_S = CHALLENGE_LIMIT_MS / 1000;
 /** Bỏ ×1, ×10, ×20 vì quá dễ */
 export const CHALLENGE_MULTIPLIERS = [2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 export const CHALLENGE_TABLES = [17, 35] as const;

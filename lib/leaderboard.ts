@@ -4,7 +4,7 @@ import { CHALLENGE_LIMIT_MS } from "./rules";
 export type LeaderRow = { rank: number; username: string; durationMs: number; achievedAt: string };
 
 /**
- * Bảng Tôn Giả Vinh Diệu: thời gian tốt nhất (≤ 16 giây) của mỗi người, nhanh nhất lên đầu.
+ * Bảng Tôn Giả Vinh Diệu: thời gian tốt nhất (≤ CHALLENGE_LIMIT_MS) của mỗi người, nhanh nhất lên đầu.
  * Bằng giờ thì ai đạt trước xếp trên. Đọc từ bảng best_times (mỗi người một dòng) nên rất nhanh.
  */
 export async function topRows(pool: Pool, limit = 100): Promise<LeaderRow[]> {
@@ -25,7 +25,7 @@ export async function topRows(pool: Pool, limit = 100): Promise<LeaderRow[]> {
   }));
 }
 
-/** Kỷ lục cá nhân (kể cả khi chưa đạt 16 giây) và hạng nếu đã vào bảng. */
+/** Kỷ lục cá nhân (kể cả khi chưa đạt mốc) và hạng nếu đã vào bảng. */
 export async function standing(pool: Pool, userId: number): Promise<{ personalBestMs: number | null; rank: number | null }> {
   const r = await pool.query(
     `select b.duration_ms,

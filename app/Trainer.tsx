@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Fact, MAX_N, TABLES, Table, factKey, splitText } from "./facts";
+import { Fact, MAX_N, TABLES, Table, factKey } from "./facts";
 import dynamic from "next/dynamic";
 import { AccountButton, useAuth } from "./Account";
 
@@ -47,17 +47,17 @@ export default function Trainer() {
         <span className="brand">
           <span className="chip c17 mini">17</span>
           <span className="chip c35 mini">35</span>
-          Bảng nhân
+          rolexnomistake
         </span>
         <AccountButton auth={auth} />
       </div>
 
       {tab === "table" && (
         <header className="felt">
-          <h1>Bảng nhân 17 &amp; 35</h1>
+          <h1>rolexnomistake</h1>
           <p className="sub">
-            Học thuộc từ ×1 đến ×20. Xem bảng, che đáp án để tự kiểm tra, luyện ở chế độ test rồi
-            thử sức ở Challenge để vào bảng Tôn Giả Vinh Diệu.
+            Học thuộc bảng nhân 17 và 35 từ ×1 đến ×20. Xem bảng, che đáp án để tự kiểm tra, luyện ở chế
+            độ test rồi thử sức ở Challenge để vào bảng Tôn Giả Vinh Diệu.
           </p>
           <div className="payouts">
             <div className="pay">
@@ -157,7 +157,6 @@ function TableView() {
                       <b>
                         {a} × {n}
                       </b>
-                      <span className="split">{splitText(a, n)}</span>
                     </span>
                     <button
                       className={`ans${shown.has(k) ? " shown" : ""}`}
@@ -174,26 +173,6 @@ function TableView() {
         ))}
       </div>
 
-      <div className="tips">
-        <h3>Mẹo nhớ nhanh</h3>
-        <ul>
-          <li>
-            <b>17 × n</b> = 10 × n + 7 × n. Ví dụ 17 × 8 = 80 + 56 = 136.
-          </li>
-          <li>
-            <b>17 × n</b> = 20 × n − 3 × n. Ví dụ 17 × 13 = 260 − 39 = 221.
-          </li>
-          <li>
-            <b>35 × n</b> = 30 × n + 5 × n. Ví dụ 35 × 7 = 210 + 35 = 245.
-          </li>
-          <li>
-            <b>35 × số chẵn</b>: chia đôi n rồi nhân 70. Ví dụ 35 × 16 = 8 × 70 = 560.
-          </li>
-          <li>
-            <b>35 × n</b> = 36 × n − n. Ví dụ 35 × 12 = 432 − 12 = 420.
-          </li>
-        </ul>
-      </div>
     </section>
   );
 }
@@ -411,9 +390,7 @@ function TestView() {
                 {result.ok ? "✓ Đúng! " : "✗ Chưa đúng. "}
                 {result.fact[0]} × {result.fact[1]} = {result.fact[0] * result.fact[1]}
               </span>
-              <span className="fb-split">
-                {result.ok ? splitText(result.fact[0], result.fact[1]) : `Bạn trả lời ${result.given} · ${splitText(result.fact[0], result.fact[1])}`}
-              </span>
+              {!result.ok && <span className="fb-split">Bạn trả lời {result.given}</span>}
             </>
           )}
         </div>

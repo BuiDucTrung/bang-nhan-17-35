@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 // Cho phép "Thêm vào Màn hình chính" và mở như một ứng dụng, không có thanh địa chỉ
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Bảng nhân 17 & 35",
-    short_name: "Bảng nhân",
+    name: "rolexnomistake",
+    short_name: "rolexnomistake",
     description: "Học và luyện bảng nhân 17 và 35, Challenge và bảng Tôn Giả Vinh Diệu.",
     start_url: "/",
     display: "standalone",

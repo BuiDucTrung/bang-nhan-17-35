@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Auth, api } from "./Account";
 import { markLeaderboardStale } from "./lbState";
-import { CHALLENGE_LIMIT_MS, CHALLENGE_SIZE, formatSeconds } from "@/lib/rules";
+import { CHALLENGE_LIMIT_MS, CHALLENGE_LIMIT_S, CHALLENGE_SIZE, formatSeconds } from "@/lib/rules";
 
 type Phase = "intro" | "countdown" | "running" | "submitting" | "result";
 type Q = [number, number];
@@ -152,13 +152,13 @@ export default function ChallengeView({ auth, onShowRank }: { auth: Auth; onShow
       <section className="view ch">
         <div className="ch-intro">
           <p className="eyebrow">Challenge</p>
-          <h2 className="ch-title">10 phép · 16 giây</h2>
+          <h2 className="ch-title">10 phép · {CHALLENGE_LIMIT_S} giây</h2>
           <ul className="ch-rules">
             <li>10 phép ngẫu nhiên, không trùng nhau, lấy từ bảng 17 và 35.</li>
             <li>Không có phép ×1, ×10, ×20.</li>
             <li>Trả lời sai thì nhập lại, đồng hồ vẫn chạy.</li>
             <li>
-              Hoàn thành trong <b>16 giây</b> trở xuống để có tên trong bảng <b>Tôn Giả Vinh Diệu</b>.
+              Hoàn thành trong <b>{CHALLENGE_LIMIT_S} giây</b> trở xuống để có tên trong bảng <b>Tôn Giả Vinh Diệu</b>.
             </li>
           </ul>
 
@@ -222,7 +222,7 @@ export default function ChallengeView({ auth, onShowRank }: { auth: Auth; onShow
             </p>
           ) : (
             <p className="ch-verdict">
-              Chưa đạt. Cần 16 giây trở xuống, bạn chậm hơn {formatSeconds(over)}.
+              Chưa đạt. Cần {CHALLENGE_LIMIT_S} giây trở xuống, bạn chậm hơn {formatSeconds(over)}.
             </p>
           )}
           <dl className="ch-facts">

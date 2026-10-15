@@ -11,10 +11,10 @@ const display = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: "Bảng nhân 17 & 35",
+  title: "rolexnomistake",
   description:
-    "Học và luyện bảng nhân 17 và 35 từ ×1 đến ×20, có mẹo tính nhẩm, chế độ test, Challenge và bảng Tôn Giả Vinh Diệu.",
-  appleWebApp: { capable: true, title: "Bảng nhân", statusBarStyle: "default" },
+    "Học và luyện bảng nhân 17 và 35 từ ×1 đến ×20, có chế độ test, Challenge và bảng Tôn Giả Vinh Diệu.",
+  appleWebApp: { capable: true, title: "rolexnomistake", statusBarStyle: "default" },
   formatDetection: { telephone: false },
   referrer: "strict-origin-when-cross-origin",
 };

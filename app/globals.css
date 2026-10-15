@@ -69,16 +69,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 .rows li:hover { background: var(--soft); }
 .eq { font-size: 17px; white-space: nowrap; min-width: 0; }
 .eq b { font-weight: 600; }
-.split { display: block; font-size: 12.5px; color: var(--muted); }
 .ans { font-weight: 800; font-size: 22px; min-width: 3.2ch; text-align: right; border: 0; background: transparent; color: var(--fg); cursor: pointer; padding: 2px 6px; border-radius: 8px; font-variant-numeric: tabular-nums; }
 .t17 .ans { color: var(--chip17); } .t35 .ans { color: var(--chip35); }
 .hidden-ans .ans { color: transparent !important; background: var(--soft); }
 .hidden-ans .t17 .ans.shown { color: var(--chip17) !important; background: transparent; }
 .hidden-ans .t35 .ans.shown { color: var(--chip35) !important; background: transparent; }
 
-.tips { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 8px; }
-.tips h3 { margin: 0; font-size: 18px; }
-.tips ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; max-width: 65ch; }
 
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
@@ -165,12 +161,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 
 /* ================= Tài khoản ================= */
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
-.brand { display: flex; align-items: center; gap: 6px; font-family: var(--f-display), sans-serif; font-weight: 800; font-size: 18px; }
+.brand { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; font-family: var(--f-display), sans-serif; font-weight: 800; font-size: 18px; }
 .chip.mini { width: 24px; height: 24px; font-size: 10px; border-width: 2px; }
 .chip.mini + .chip.mini { margin-left: -10px; }
 .acct { position: relative; display: flex; gap: 6px; align-items: center; }
 .acct-placeholder { width: 120px; height: 36px; }
-.acct-btn { font: 600 14px var(--f-body), sans-serif; border: 1.5px solid var(--felt); background: var(--felt); color: var(--felt-fg); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+.acct-btn { white-space: nowrap; font: 600 14px var(--f-body), sans-serif; border: 1.5px solid var(--felt); background: var(--felt); color: var(--felt-fg); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
 .acct-btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
 .acct-user { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); padding: 3px 12px 3px 3px; border-radius: 999px; cursor: pointer; font: 600 14px var(--f-body), sans-serif; max-width: 200px; }
 .acct-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -262,7 +258,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 .lb-list li.me { background: color-mix(in srgb, var(--gold) 12%, transparent); }
 
 @media (max-width: 520px) {
-  .acct-btn { padding: 6px 12px; font-size: 13.5px; }
+  .acct-btn { padding: 6px 10px; font-size: 13.5px; }
+  .topbar { gap: 8px; }
+  .brand { font-size: 16px; gap: 5px; }
+  .acct { gap: 5px; flex: none; }
   .acct-name { max-width: 110px; }
   .ch-intro, .ch-result { padding: 18px 16px; }
   .dialog { padding: 18px 16px; }
