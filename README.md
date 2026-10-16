@@ -19,31 +19,11 @@ Website học và luyện bảng nhân 17 và 35, từ ×1 đến ×20. Làm b�
 
 ## Cơ sở dữ liệu
 
-Website chọn nơi lưu dữ liệu theo biến môi trường (code ở `lib/store/`):
+Website dùng Postgres (Neon), đọc địa chỉ từ biến môi trường `DATABASE_URL` (hoặc `POSTGRES_URL`). Code truy cập dữ liệu nằm ở `lib/store/`. Các bảng được tự tạo ở lần chạy đầu.
 
-| Biến môi trường | Nơi lưu |
-|---|---|
-| `MONGODB_URI` | MongoDB (ví dụ MongoDB Atlas). Tên database: `MONGODB_DB`, mặc định `rolexnomistake` |
-| `DATABASE_URL` hoặc `POSTGRES_URL` | Postgres (ví dụ Neon) |
+Trên Vercel: mở project → **Storage** → **Create Database** → chọn **Neon** (Postgres) → **Connect** vào project này. Vercel tự thêm `DATABASE_URL`. Sau đó **Redeploy**.
 
-Có cả hai thì dùng MongoDB; đặt `DATA_STORE=postgres` để ép dùng Postgres. Bảng / collection và index được tự tạo ở lần chạy đầu.
-
-### Dùng MongoDB Atlas trên Vercel
-
-1. Vercel → project → **Storage** → **Create Database** → **MongoDB Atlas** → chọn khu vực **Singapore** → **Connect** vào project. Vercel tự thêm `MONGODB_URI`.
-2. Chuyển tài khoản và kỷ lục từ Postgres sang (mọi người giữ nguyên mật khẩu, chỉ cần đăng nhập lại một lần):
-   ```bash
-   DATABASE_URL=<chuỗi kết nối Neon> MONGODB_URI=<chuỗi kết nối Atlas> npm run migrate:mongo
-   ```
-3. **Redeploy**. Muốn quay lại Postgres: xoá `MONGODB_URI` (hoặc đặt `DATA_STORE=postgres`) rồi Redeploy.
-
-### Dùng Postgres (Neon) trên Vercel
-
-Vercel → project → **Storage** → **Create Database** → **Neon** → **Connect**. Vercel tự thêm `DATABASE_URL`. Sau đó **Redeploy**.
-
-### Giữ dữ liệu gọn
-
-Lịch sử từng lượt chơi chỉ giữ 30 ngày (MongoDB dùng TTL index, Postgres dọn định kỳ); kỷ lục của mỗi người giữ vĩnh viễn.
+Lịch sử từng lượt chơi chỉ giữ 30 ngày (dọn định kỳ); kỷ lục của mỗi người giữ vĩnh viễn.
 
 ## Chạy trên máy
 

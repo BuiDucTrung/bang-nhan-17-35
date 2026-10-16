@@ -1,5 +1,4 @@
-// Lớp lưu trữ dùng chung. Các route chỉ gọi những hàm này, không viết SQL hay truy vấn Mongo trực tiếp,
-// nên có thể đổi giữa Postgres và MongoDB bằng biến môi trường mà không sửa logic website.
+// Lớp lưu trữ dùng chung. Các route chỉ gọi những hàm này, không viết SQL trực tiếp.
 
 export type Fact = [number, number];
 
@@ -12,7 +11,7 @@ export type FinishedChallenge = { durationMs: number; finishedAt: Date };
 export class DbNotConfigured extends Error {}
 
 export interface Store {
-  readonly kind: "postgres" | "mongodb";
+  readonly kind: "postgres";
 
   /* Tài khoản */
   /** Tạo tài khoản; trả về null nếu tên (không phân biệt hoa thường) đã có người dùng. */
