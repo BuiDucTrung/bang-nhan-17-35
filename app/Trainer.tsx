@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Fact, MAX_N, TABLES, Table, factKey } from "./facts";
 import dynamic from "next/dynamic";
 import { AccountButton, useAuth } from "./Account";
+import { useFitKeypad } from "./useFitKeypad";
 
 // Các phần ít dùng hơn chỉ tải khi cần, để lần mở đầu tiên nhẹ và nhanh
 const loadChallenge = () => import("./Challenge");
@@ -234,6 +235,7 @@ function TestView() {
   const [touch, setTouch] = useState(false);
   const touchRef = useRef(false);
   const answered = result !== null;
+  useFitKeypad(true);
 
   const next = useCallback(
     (s: TestSet = set, r: number = range, m: Record<string, number> = misses) => {
@@ -350,7 +352,7 @@ function TestView() {
       <div className="stats">
         <Stat label="Đúng" value={ok} />
         <Stat label="Sai" value={bad} />
-        <Stat label="Chuỗi đúng" value={streak} />
+        <Stat label="Chuỗi" value={streak} />
         <Stat label="Kỷ lục" value={best} />
       </div>
 

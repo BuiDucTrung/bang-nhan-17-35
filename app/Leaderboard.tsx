@@ -56,14 +56,17 @@ export default function LeaderboardView({ auth, onPlay }: { auth: Auth; onPlay: 
       {auth.user && me && (
         <div className="lb-me">
           <span>
-            <b>{me.username}</b> ·{" "}
-            {me.rank ? (
-              <>
-                Hạng <b>#{me.rank}</b>
-              </>
-            ) : (
-              "chưa vào bảng"
-            )}
+            <b>{me.username}</b>{" "}
+            <span className="nowrap">
+              ·{" "}
+              {me.rank ? (
+                <>
+                  Hạng <b>#{me.rank}</b>
+                </>
+              ) : (
+                "chưa vào bảng"
+              )}
+            </span>
           </span>
           <span>
             Kỷ lục: <b>{me.personalBestMs != null ? formatSeconds(me.personalBestMs) : "chưa có"}</b>

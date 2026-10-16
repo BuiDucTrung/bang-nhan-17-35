@@ -36,6 +36,12 @@ export const CHALLENGE_LIMIT_S = CHALLENGE_LIMIT_MS / 1000;
 export const CHALLENGE_MULTIPLIERS = [2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 export const CHALLENGE_TABLES = [17, 35] as const;
 
+/** Số giây với 2 chữ số thập phân, cắt bớt chứ không làm tròn lên (59 999 ms → "59,99"). */
+export function secondsText(ms: number): string {
+  const cs = Math.floor(Math.max(0, ms) / 10); // phần trăm giây
+  return `${Math.floor(cs / 100)},${String(cs % 100).padStart(2, "0")}`;
+}
+
 export function formatSeconds(ms: number): string {
-  return (ms / 1000).toFixed(2).replace(".", ",") + " giây";
+  return secondsText(ms) + " giây";
 }

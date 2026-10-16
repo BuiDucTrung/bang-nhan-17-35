@@ -100,12 +100,21 @@ export function AccountButton({ auth }: { auth: Auth }) {
     );
   return (
     <div className="acct">
-      <button className="acct-user" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
+      <button
+        className="acct-user"
+        aria-expanded={menu}
+        aria-label={`Tài khoản ${auth.user.username}`}
+        onClick={() => setMenu((m) => !m)}
+      >
         <span className="avatar">{auth.user.username.slice(0, 1).toUpperCase()}</span>
         <span className="acct-name">{auth.user.username}</span>
       </button>
       {menu && (
         <div className="acct-menu">
+          <p className="acct-menu-name">
+            Đang đăng nhập
+            <b>{auth.user.username}</b>
+          </p>
           <button
             onClick={async () => {
               setMenu(false);

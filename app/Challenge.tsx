@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Auth, api } from "./Account";
 import { markLeaderboardStale } from "./lbState";
-import { CHALLENGE_LIMIT_MS, CHALLENGE_LIMIT_S, CHALLENGE_SIZE, formatSeconds } from "@/lib/rules";
+import { useFitKeypad } from "./useFitKeypad";
+import { CHALLENGE_LIMIT_MS, CHALLENGE_LIMIT_S, CHALLENGE_SIZE, formatSeconds, secondsText } from "@/lib/rules";
 
 type Phase = "intro" | "countdown" | "running" | "submitting" | "result";
 type Q = [number, number];
@@ -36,6 +37,7 @@ export default function ChallengeView({ auth, onShowRank }: { auth: Auth; onShow
   const timerEl = useRef<HTMLSpanElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const clientMsRef = useRef(0);
+  useFitKeypad(phase === "running" || phase === "submitting");
 
   useEffect(() => {
     setTouch(window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0);
@@ -56,7 +58,7 @@ export default function ChallengeView({ auth, onShowRank }: { auth: Auth; onShow
   const tick = useCallback(() => {
     const ms = performance.now() - startRef.current;
     if (timerEl.current) {
-      timerEl.current.textContent = (ms / 1000).toFixed(2).replace(".", ",");
+      timerEl.current.textContent = secondsText(ms);
       timerEl.current.parentElement?.classList.toggle("over", ms > CHALLENGE_LIMIT_MS);
     }
     rafRef.current = requestAnimationFrame(tick);
@@ -227,14 +229,14 @@ export default function ChallengeView({ auth, onShowRank }: { auth: Auth; onShow
           )}
           <dl className="ch-facts">
             <div>
-              <dt>Kỷ lục cá nhân</dt>
+              <dt>Kỷ lục</dt>
               <dd>
                 {result.personalBestMs != null ? formatSeconds(result.personalBestMs) : "—"}
                 {result.isNewBest && <span className="badge">Mới</span>}
               </dd>
             </div>
             <div>
-              <dt>Số lần nhập sai</dt>
+              <dt>Nhập sai</dt>
               <dd>{mistakes}</dd>
             </div>
           </dl>

@@ -17,6 +17,9 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 html { background: var(--bg); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* Ẩn thanh cuộn của trang và các vùng cuộn bên trong, vẫn vuốt/cuộn bình thường */
+html, body, .overlay { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar, .overlay::-webkit-scrollbar { display: none; width: 0; height: 0; }
 button, input { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 button { -webkit-user-select: none; user-select: none; }
 button:disabled { cursor: default; }
@@ -99,7 +102,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 @keyframes bad { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 @media (prefers-reduced-motion: reduce) { .card { animation: none !important; } }
 .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 300px; }
-.keypad button { font-weight: 700; font-size: 22px; padding: 12px 0; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+.keypad button { height: var(--key-h, auto); font-weight: 700; font-size: 22px; padding: 12px 0; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
 .keypad button:active { background: var(--soft); }
 .misses { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; }
 .misses h3 { margin: 0 0 8px; font-size: 17px; }
@@ -132,7 +135,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
   .test-view .card { order: 1; }
   .test-view .stats { order: 2; }
   .test-view .misses { order: 3; }
-  .ch.running .keypad button { min-height: 56px; }
   .test-view > div:last-child { order: 4; }
   .is-touch .go { display: none; }
   .is-touch .answer-row { max-width: none; }
@@ -143,7 +145,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 
   .stats { grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .stat { padding: 6px 8px; border-radius: 10px; text-align: center; }
-  .stat span { font-size: 10px; letter-spacing: .03em; }
+  .stat span { font-size: 11px; letter-spacing: .02em; white-space: nowrap; }
   .stat b { font-size: 19px; }
 
   .card { padding: 16px 14px; gap: 10px; border-radius: 16px; }
@@ -152,28 +154,46 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
   .go { padding: 0 16px; font-size: 15px; }
   .feedback { font-size: 16px; min-height: 2.9em; }
   .keypad { max-width: none; gap: 8px; }
-  .keypad button { min-height: 52px; font-size: 24px; }
+  .keypad button { height: var(--key-h, 52px); min-height: 44px; padding: 0; font-size: 24px; }
 }
 @media (max-width: 360px) {
   .q { font-size: 48px; }
-  .keypad button { min-height: 48px; }
+}
+/* Màn hình thấp (iPhone SE, mini, X, chế độ thu phóng): thu gọn để bàn số không bị khuất */
+@media (max-width: 520px) {
+  html.play-compact .wrap { gap: 8px; padding-block: 6px 24px; }
+  html.play-compact .topbar { min-height: 34px; }
+  html.play-compact .tabs button { padding: 7px 2px; }
+  html.play-compact .seg-mode button { padding: 6px 4px; }
+  html.play-compact .seg-range button { padding: 3px 8px; }
+  html.play-compact .view, html.play-compact .ch.running { gap: 8px; }
+  html.play-compact .card { padding: 10px 12px; gap: 6px; }
+  html.play-compact .q { font-size: 38px; }
+  html.play-compact #answer, html.play-compact #ch-answer { font-size: 22px; padding: 2px 8px; }
+  html.play-compact .feedback { min-height: 2.4em; font-size: 14px; gap: 0; line-height: 1.2; }
+  html.play-compact .fb-split { font-size: 13px; }
+  html.play-compact .ch-msg { min-height: 1.2em; font-size: 14px; }
+  html.play-compact .ch-clock { font-size: 24px; }
+  html.play-compact .keypad { gap: 6px; }
 }
 
 /* ================= Tài khoản ================= */
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
 .brand { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; font-family: var(--f-display), sans-serif; font-weight: 800; font-size: 18px; }
-.chip.mini { width: 24px; height: 24px; font-size: 10px; border-width: 2px; }
+.chip.mini { width: 26px; height: 26px; font-size: 11px; border-width: 2px; }
 .chip.mini + .chip.mini { margin-left: -10px; }
 .acct { position: relative; display: flex; gap: 6px; align-items: center; }
 .acct-placeholder { width: 120px; height: 36px; }
 .acct-btn { white-space: nowrap; font: 600 14px var(--f-body), sans-serif; border: 1.5px solid var(--felt); background: var(--felt); color: var(--felt-fg); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
 .acct-btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
-.acct-user { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); padding: 3px 12px 3px 3px; border-radius: 999px; cursor: pointer; font: 600 14px var(--f-body), sans-serif; max-width: 200px; }
-.acct-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct-user { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); padding: 3px 12px 3px 3px; border-radius: 999px; cursor: pointer; font: 600 14px var(--f-body), sans-serif; }
+.acct-name { white-space: nowrap; }
 .avatar { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--felt); color: var(--felt-fg); font-weight: 700; flex: none; }
-.acct-menu { position: absolute; right: 0; top: calc(100% + 6px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.14); z-index: 20; min-width: 140px; }
+.acct-menu { width: max-content; max-width: calc(100vw - 32px); position: absolute; right: 0; top: calc(100% + 6px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.14); z-index: 20; min-width: 140px; }
 .acct-menu button { width: 100%; text-align: left; border: 0; background: transparent; color: var(--fg); font: 500 15px var(--f-body), sans-serif; padding: 10px 12px; border-radius: 8px; cursor: pointer; }
 .acct-menu button:hover { background: var(--soft); }
+.acct-menu-name { margin: 0; padding: 8px 12px 10px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.acct-menu-name b { display: block; margin-top: 2px; font-size: 16px; color: var(--fg); overflow-wrap: anywhere; }
 
 .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(8, 14, 11, .55); display: grid; place-items: center; padding: 16px; padding-top: max(16px, env(safe-area-inset-top, 0px)); overflow-y: auto; }
 .dialog { width: 100%; max-width: 420px; background: var(--surface); color: var(--fg); border-radius: 18px; padding: 20px; display: grid; gap: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
@@ -203,7 +223,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 .ch-rules { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
 .ch-me { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; background: var(--soft); border-radius: 12px; padding: 10px 14px; font-size: 15px; font-variant-numeric: tabular-nums; }
 .ch-login p { margin: 0; color: var(--muted); }
-.ch-login-btns, .ch-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ch-login-btns, .ch-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; }
+.big { white-space: nowrap; }
 .countdown { font-family: var(--f-display), sans-serif; font-weight: 800; font-size: 64px; text-align: center; color: var(--felt); padding: 8px 0; animation: pop .7s ease-out infinite; }
 @keyframes pop { 0% { transform: scale(1.25); opacity: .4; } 40% { transform: scale(1); opacity: 1; } }
 
@@ -211,7 +232,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 .ch-bar { display: flex; justify-content: space-between; align-items: baseline; font-variant-numeric: tabular-nums; }
 .ch-step { font-size: 16px; color: var(--muted); }
 .ch-step b { color: var(--fg); font-size: 20px; }
-.ch-clock { font-family: var(--f-display), sans-serif; font-weight: 800; font-size: 28px; font-variant-numeric: tabular-nums; }
+.ch-clock { white-space: nowrap; font-family: var(--f-display), sans-serif; font-weight: 800; font-size: 28px; font-variant-numeric: tabular-nums; }
 .ch-clock span { display: inline-block; min-width: 4.2ch; text-align: right; }
 .ch-clock.over { color: var(--bad); }
 .dots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
@@ -249,7 +270,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
 .lb-list li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: "rank name time" "rank date time"; column-gap: 12px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .lb-list li:first-child { border-top: 0; }
 .lb-rank { grid-area: rank; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-display), sans-serif; font-weight: 800; background: var(--soft); color: var(--fg); }
-.lb-name { grid-area: name; font-weight: 700; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-name { grid-area: name; font-weight: 700; font-size: 16px; overflow-wrap: anywhere; min-width: 0; }
+.lb-time, .nowrap { white-space: nowrap; }
+.lb-me span, .ch-me span { overflow-wrap: anywhere; min-width: 0; }
 .lb-date { grid-area: date; font-size: 12.5px; color: var(--muted); }
 .lb-time { grid-area: time; font-family: var(--f-display), sans-serif; font-weight: 800; font-size: 18px; }
 .top1 .lb-rank { background: #d4a72c; color: #fff; }
@@ -262,8 +285,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
   .topbar { gap: 8px; }
   .brand { font-size: 16px; gap: 5px; }
   .acct { gap: 5px; flex: none; }
-  .acct-name { max-width: 110px; }
+  /* điện thoại: chỉ hiện chữ cái đầu, tên đầy đủ ở trong menu */
+  .acct-name { display: none; }
+  .acct-user { padding: 2px; max-width: none; }
+  .avatar { width: 32px; height: 32px; }
   .ch-intro, .ch-result { padding: 18px 16px; }
   .dialog { padding: 18px 16px; }
+}
+@media (max-width: 359px) {
+  .brand .chip.mini { display: none; }
+  .acct-btn { padding: 6px 9px; font-size: 13px; }
 }
 .lazy-loading { color: var(--muted); padding: 24px 0; text-align: center; margin: 0; }
