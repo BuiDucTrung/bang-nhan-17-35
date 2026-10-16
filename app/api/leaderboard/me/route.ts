@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { currentUser, guard } from "@/lib/auth";
-import { standing } from "@/lib/leaderboard";
+import { store } from "@/lib/store";
+import { CHALLENGE_LIMIT_MS } from "@/lib/rules";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +11,6 @@ export async function GET() {
   return guard(async () => {
     const user = await currentUser();
     if (!user) return NextResponse.json({ me: null });
-    const pool = await db();
-    return NextResponse.json({ me: { username: user.username, ...(await standing(pool, user.id)) } });
+    return NextResponse.json({ me: { username: user.username, ...(await store().standing(user.id, CHALLENGE_LIMIT_MS)) } });
   });
 }

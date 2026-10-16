@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { store } from "@/lib/store";
 import { currentUser, guard, jsonError } from "@/lib/auth";
-import { recordBest, standing } from "@/lib/leaderboard";
 import { assertSameOrigin, readJson } from "@/lib/security";
 import { CHALLENGE_LIMIT_MS, CHALLENGE_SIZE } from "@/lib/rules";
 
@@ -25,41 +24,28 @@ export async function POST(req: Request) {
       return jsonError("Dữ liệu challenge không hợp lệ.");
     }
 
-    const pool = await db();
-    const found = await pool.query(
-      `select questions from challenges
-       where id = $1 and user_id = $2 and finished_at is null and started_at > now() - interval '10 minutes'`,
-      [id, user.id]
-    );
-    if (!found.rows[0]) return jsonError("Lượt challenge này đã kết thúc hoặc hết hạn. Hãy bắt đầu lượt mới.", 409);
+    const st = store();
+    const questions = await st.openChallenge(id, user.id);
+    if (!questions) return jsonError("Lượt challenge này đã kết thúc hoặc hết hạn. Hãy bắt đầu lượt mới.", 409);
 
     // Máy chủ tự chấm lại từng câu bằng phép nhân, không tin kết quả do trình duyệt gửi lên
-    const questions = found.rows[0].questions as [number, number][];
     const allRight = questions.every(([a, n], i) => Number(answers[i]) === a * n);
     if (!allRight) return jsonError("Có câu trả lời chưa đúng nên lượt này không được tính.");
 
-    // Thời gian chính thức = lúc máy chủ nhận bài − lúc máy chủ phát đề
-    const upd = await pool.query(
-      `update challenges
-       set finished_at = clock_timestamp(),
-           duration_ms = round(extract(epoch from (clock_timestamp() - started_at)) * 1000)::int,
-           mistakes = $3
-       where id = $1 and user_id = $2 and finished_at is null
-       returning duration_ms, finished_at`,
-      [id, user.id, mistakes]
-    );
-    if (!upd.rows[0]) return jsonError("Lượt challenge này đã được nộp.", 409);
+    // Thời gian chính thức = lúc máy chủ nhận bài − lúc máy chủ phát đề (đồng hồ của cơ sở dữ liệu)
+    const done = await st.finishChallenge(id, user.id, mistakes);
+    if (!done) return jsonError("Lượt challenge này đã được nộp.", 409);
 
-    const durationMs = Number(upd.rows[0].duration_ms);
-    const isNewBest = await recordBest(pool, user.id, durationMs, upd.rows[0].finished_at);
-    const st = await standing(pool, user.id);
+    const durationMs = done.durationMs;
+    const isNewBest = await st.recordBest(user.id, user.username, durationMs, done.finishedAt);
+    const standing = await st.standing(user.id, CHALLENGE_LIMIT_MS);
 
     return NextResponse.json({
       durationMs,
       qualified: durationMs <= CHALLENGE_LIMIT_MS,
       isNewBest,
-      personalBestMs: st.personalBestMs,
-      rank: st.rank,
+      personalBestMs: standing.personalBestMs,
+      rank: standing.rank,
     });
   });
 }

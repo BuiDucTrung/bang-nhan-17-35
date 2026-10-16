@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { store } from "@/lib/store";
 import { currentUser, guard, jsonError } from "@/lib/auth";
 import { assertSameOrigin, housekeeping, rateLimit } from "@/lib/security";
 import { CHALLENGE_MULTIPLIERS, CHALLENGE_SIZE, CHALLENGE_TABLES } from "@/lib/rules";
@@ -28,17 +28,10 @@ export async function POST(req: Request) {
     // Tối đa 60 lượt mỗi 10 phút cho một người (chặn spam làm phình cơ sở dữ liệu)
     await rateLimit(`ch:${user.id}`, 60, 600, "Bạn bắt đầu quá nhiều lượt liên tiếp.");
 
-    const pool = await db();
-    // Huỷ các lượt đang dở của người này, mỗi lúc chỉ có một lượt
-    await pool.query("delete from challenges where user_id = $1 and finished_at is null", [user.id]);
-
     const questions = pickQuestions();
-    // Máy chủ ghi giờ bắt đầu (clock_timestamp) để tính thời gian chính thức
-    const r = await pool.query("insert into challenges (user_id, questions) values ($1, $2) returning id", [
-      user.id,
-      JSON.stringify(questions),
-    ]);
+    // Huỷ lượt đang dở (mỗi lúc chỉ một lượt) và tạo lượt mới; giờ bắt đầu do cơ sở dữ liệu ghi
+    const id = await store().startChallenge(user.id, questions);
     await housekeeping();
-    return NextResponse.json({ id: r.rows[0].id, questions });
+    return NextResponse.json({ id, questions });
   });
 }

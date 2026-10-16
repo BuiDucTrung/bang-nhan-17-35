@@ -2,7 +2,7 @@ import { createHash, randomBytes, scrypt as scryptCb, timingSafeEqual } from "no
 import { promisify } from "node:util";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { db, DbNotConfigured } from "./db";
+import { DbNotConfigured, store, type SessionUser } from "./store";
 import { HttpError } from "./security";
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
@@ -14,7 +14,7 @@ export const SESSION_COOKIE = PROD ? "__Host-bn_session" : "bn_session";
 export const HINT_COOKIE = "bn_in";
 const SESSION_DAYS = 30;
 
-export type SessionUser = { id: number; username: string };
+export type { SessionUser };
 
 export async function hashPassword(pw: string): Promise<string> {
   const salt = randomBytes(16);
@@ -45,11 +45,7 @@ const cookieBase = { sameSite: "lax" as const, secure: PROD, path: "/", maxAge: 
 /** Tạo phiên đăng nhập và gắn cookie vào response. */
 export async function startSession(res: NextResponse, user: SessionUser) {
   const token = randomBytes(32).toString("base64url");
-  const pool = await db();
-  await pool.query(
-    `insert into sessions (token_hash, user_id, expires_at) values ($1, $2, now() + make_interval(days => $3))`,
-    [sha256(token), user.id, SESSION_DAYS]
-  );
+  await store().createSession(sha256(token), user, SESSION_DAYS);
   res.cookies.set(SESSION_COOKIE, token, { ...cookieBase, httpOnly: true });
   res.cookies.set(HINT_COOKIE, encodeURIComponent(user.username), { ...cookieBase, httpOnly: false });
 }
@@ -61,23 +57,14 @@ export function clearSessionCookies(res: NextResponse) {
 
 export async function endSession(res: NextResponse) {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (token) {
-    const pool = await db();
-    await pool.query("delete from sessions where token_hash = $1", [sha256(token)]);
-  }
+  if (token) await store().deleteSession(sha256(token));
   clearSessionCookies(res);
 }
 
 export async function currentUser(): Promise<SessionUser | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token || token.length > 100) return null;
-  const pool = await db();
-  const r = await pool.query(
-    `select u.id, u.username from sessions s join users u on u.id = s.user_id
-     where s.token_hash = $1 and s.expires_at > now()`,
-    [sha256(token)]
-  );
-  return r.rows[0] ?? null;
+  return store().sessionUser(sha256(token));
 }
 
 export function jsonError(message: string, status = 400) {

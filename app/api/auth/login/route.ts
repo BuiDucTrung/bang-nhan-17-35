@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { store } from "@/lib/store";
 import { burnPasswordCheck, guard, jsonError, startSession, verifyPassword } from "@/lib/auth";
 import { assertSameOrigin, clearRateLimit, clientIp, housekeeping, rateLimit, readJson } from "@/lib/security";
 
@@ -21,13 +21,9 @@ export async function POST(req: Request) {
     await rateLimit(nameKey, 8, 900, msg);
     await rateLimit(`login-ip:${ip}`, 40, 900, msg);
 
-    const pool = await db();
-    const r = await pool.query("select id, username, password_hash from users where username_key = $1", [
-      username.toLowerCase(),
-    ]);
-    const u = r.rows[0];
-    const ok = u ? await verifyPassword(password, u.password_hash) : (await burnPasswordCheck(password), false);
-    if (!ok) return jsonError("Sai tên hoặc mật khẩu.", 401);
+    const u = await store().findUserByName(username.toLowerCase());
+    const ok = u ? await verifyPassword(password, u.passwordHash) : (await burnPasswordCheck(password), false);
+    if (!ok || !u) return jsonError("Sai tên hoặc mật khẩu.", 401);
 
     await clearRateLimit(nameKey);
     const res = NextResponse.json({ user: { username: u.username } });
