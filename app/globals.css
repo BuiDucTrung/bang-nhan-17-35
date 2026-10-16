@@ -39,6 +39,8 @@ h1, h2, h3, .q, .ans, .stat b, .chip, #answer, .keypad button {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 .view { display: grid; gap: 18px; }
+/* Không phần tử nào được đẩy trang rộng hơn màn hình */
+.wrap > * { min-width: 0; }
 
 header.felt { background: var(--felt); color: var(--felt-fg); border-radius: 18px; padding: 22px 22px 20px; display: grid; gap: 14px; position: relative; overflow: hidden; }
 header.felt::after { content: ""; position: absolute; inset: 8px; border: 1.5px solid color-mix(in srgb, var(--gold) 55%, transparent); border-radius: 12px; pointer-events: none; }
@@ -292,8 +294,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outl
   .ch-intro, .ch-result { padding: 18px 16px; }
   .dialog { padding: 18px 16px; }
 }
-@media (max-width: 359px) {
+/* Màn hẹp (SE, X/XS/11 Pro, 12/13 mini): bỏ chip logo để thanh trên cùng vừa một hàng */
+@media (max-width: 389px) {
   .brand .chip.mini { display: none; }
   .acct-btn { padding: 6px 9px; font-size: 13px; }
+}
+/* Chế độ thu phóng màn hình (320px) */
+@media (max-width: 340px) {
+  .topbar { gap: 6px; }
+  .brand { font-size: 15px; }
+  .acct { gap: 4px; }
+  .acct-btn { padding: 5px 8px; font-size: 12.5px; }
 }
 .lazy-loading { color: var(--muted); padding: 24px 0; text-align: center; margin: 0; }
